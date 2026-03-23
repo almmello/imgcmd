@@ -1,0 +1,38 @@
+# Copilot
+.github/
+
+# Cursor
+.cursor/
+
+# VS Code
+.vscode/
+
+# Imagens e artefatos locais gerados pelo CLI
+img/
+
+# Ambiente e segredos
+.env
+.env.*
+
+# Dependencias e caches
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Controle de versao e metadados
+.git/
+.gitignore
+.gitattributes
+
+# Arquivos de desenvolvimento
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Imagens e artefatos locais gerados pelo CLI
+imgcmd-*.png

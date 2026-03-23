@@ -1,65 +1,151 @@
 # 🖼️ imgcmd
 
-> O gerador de imagens via terminal seguro, definitivo e focado no desenvolvedor.
+## 🚀 Powered by Smoonb - A solução completa para sua produtividade comercial.
 
-Gerar imagens diretamente pelo chat de IA do seu editor de código (como o GitHub Copilot) frequentemente resulta em arquivos corrompidos ou exige a instalação de extensões de terceiros duvidosas.
+> O gerador de imagens via terminal seguro, focado em desenvolvedores e pronto para fluxos com IA.
 
-O **imgcmd** resolve isso. Ele é uma ferramenta de linha de comando (CLI) construída para desenvolvedores que desejam gerar assets visuais sem sair do terminal, com **segurança total** (Zero Trust) e usando exclusivamente os SDKs oficiais do Google (Gemini) e OpenAI (DALL-E).
+Gerar imagens direto pelo chat do editor muitas vezes resulta em arquivos corrompidos, prompts mal executados ou automações frágeis. O **imgcmd** resolve isso com uma abordagem simples: usar o terminal, salvar o binário real da imagem e manter o controle total nas mãos do desenvolvedor.
 
-## ✨ Funcionalidades
+O projeto foi pensado para times que querem **segurança**, **previsibilidade** e **integração nativa com agentes de IA** sem depender de gambiarras, extensões obscuras ou geração de SVG/Base64 no chat.
 
-* **Segurança em 1º Lugar:** Suas chaves de API nunca saem da sua máquina. O código se comunica apenas com os servidores oficiais da OpenAI e do Google.
-* **Sem Arquivos Corrompidos:** Baixa o binário real da imagem e salva um arquivo `.png` perfeito direto na sua pasta atual.
-* **Rápido e Direto:** Sem interfaces complexas. Digite o comando e receba a imagem.
-* **Agnóstico de Editor:** Funciona perfeitamente no terminal do VS Code, Cursor, WebStorm ou no seu terminal nativo do sistema operacional.
+## ✨ O que o imgcmd entrega
+
+- Segurança em primeiro lugar: sua chave `GEMINI_API_KEY` fica na sua máquina, e o CLI fala diretamente com os SDKs oficiais.
+- Arquivo real no disco: a imagem é convertida para `Buffer` e salva como `.png` na pasta escolhida.
+- Fluxo rápido para desenvolvedores: rode um comando e receba o asset sem sair do terminal.
+- Organização de saída: escolha diretórios específicos para manter `assets`, `img`, `branding` ou qualquer estrutura do projeto.
+- Agentic Tooling: ensine Copilot e Cursor a usar o `imgcmd` como ferramenta nativa dentro do repositório.
 
 ## 🚀 Instalação
 
-Você pode rodar o pacote diretamente via `npx` sem precisar instalar nada permanentemente, ou instalá-lo globalmente na sua máquina:
+Instale globalmente para deixar o comando disponível em qualquer pasta do sistema:
 
 ```bash
-# Para instalar globalmente (recomendado para uso frequente)
 npm install -g imgcmd
 ```
 
+Depois disso, o comando `imgcmd` fica acessível globalmente no terminal.
+
 ## ⚙️ Configuração
 
-Como o **imgcmd** foca em segurança, ele não possui um servidor intermediário. Ele usa as suas próprias chaves de API, garantindo que você tenha controle total sobre os custos e a privacidade.
-
-Defina a sua chave de API nas variáveis de ambiente do seu sistema ou crie um arquivo `.env` na raiz do seu projeto:
+O `imgcmd` usa sua própria chave do Google Gemini. Você pode configurar isso por variável de ambiente do sistema ou com um arquivo `.env` na raiz do projeto.
 
 ```bash
-# Para usar os modelos do Google (ex: Gemini Flash Image / Nano Banana)
 export GEMINI_API_KEY="sua_chave_do_google_aqui"
-
-# Para usar os modelos da OpenAI (ex: DALL-E 3)
-export OPENAI_API_KEY="sua_chave_da_openai_aqui"
 ```
 
-## 💻 Como Usar
-
-A sintaxe é simples e desenhada para não interromper o seu fluxo de trabalho:
+Opcionalmente, você também pode definir um modelo padrão:
 
 ```bash
-# Uso básico (usará o modelo padrão configurado)
-imgcmd "Um ícone minimalista de um foguete, fundo transparente, flat design"
-
-# Especificando o modelo ou provedor (exemplo futuro)
-imgcmd "Logo para um app de finanças" --provider google
+export GEMINI_MODEL="gemini-3.1-flash-image-preview"
 ```
 
-A imagem gerada será salva automaticamente no diretório onde você executou o comando (ex: `imagem_1710000000.png`).
+## 🤖 Agentic Tooling
 
-## 🛠️ Tecnologias Utilizadas
+O grande diferencial desta versão é permitir que seu editor entenda que imagens devem ser geradas pelo CLI, e não por código improvisado no chat.
 
-  * [Node.js](https://nodejs.org/)
-  * [Google Gen AI SDK](https://www.npmjs.com/package/@google/generative-ai)
-  * [OpenAI Node SDK](https://www.npmjs.com/package/openai)
+Com isso, o **Copilot** e o **Cursor** podem ser instruídos a abrir o terminal e usar o `imgcmd` quando o usuário pedir uma imagem dentro do projeto.
 
-## 🤝 Como Contribuir
+## 🧭 Guia Passo a Passo para IA
 
-Contribuições são muito bem-vindas! Se você encontrou um bug ou tem uma ideia para uma nova funcionalidade (como suporte a novos modelos ou flags de redimensionamento), sinta-se à vontade para abrir uma *Issue* ou enviar um *Pull Request*.
+### Opção A: Configuração Automática
+
+Use um dos comandos abaixo para criar as regras automaticamente no projeto:
+
+```bash
+imgcmd -c vscode
+imgcmd -c cursor
+```
+
+Arquivos gerados:
+
+- VS Code: `.github/copilot-instructions.md`
+- Cursor: `.cursor/rules/imgcmd.mdc`
+
+### Opção B: Configuração Manual
+
+Se preferir fazer manualmente, crie o arquivo no caminho correspondente:
+
+- VS Code: `.github/copilot-instructions.md`
+- Cursor: `.cursor/rules/imgcmd.mdc`
+
+Depois cole este template de regras:
+
+```md
+# Regras para Geração de Imagens
+Ao receber um pedido de imagem, NÃO gere código (SVG/Base64).
+Use sempre o CLI instalado no sistema via terminal:
+`imgcmd "prompt detalhado" --dir <pasta_de_destino>`
+```
+
+No Cursor, o arquivo `.cursor/rules/imgcmd.mdc` deve incluir este frontmatter no topo:
+
+```yaml
+---
+description: Regras para geração de imagens via CLI imgcmd
+globs: "*"
+---
+```
+
+## 💻 Uso Atualizado
+
+### Uso básico
+
+```bash
+imgcmd "Um ícone minimalista de foguete, fundo transparente, flat design"
+```
+
+### Organizando a saída em pastas
+
+```bash
+imgcmd "Logo para tela de login em estilo clean" --dir assets/img
+```
+
+### Seleção rápida de modelo
+
+```bash
+imgcmd "Mockup de dashboard comercial moderno" --3.1
+```
+
+### Flexibilidade total com modelo específico
+
+```bash
+imgcmd "Mascote 3D para campanha de vendas" -m <modelo_especifico>
+```
+
+## 🧩 Flags disponíveis
+
+- `--2.5`: usa `gemini-2.5-flash-image`
+- `--3.1`: usa `gemini-3.1-flash-image-preview`
+- `-m`, `--model <nome>`: define um modelo exato
+- `-d`, `--dir <pasta>`: salva a imagem no diretório informado
+- `-c`, `--create-rule <ide>`: cria regras para IA no projeto (`vscode` ou `cursor`)
+- `-h`, `--help`: mostra o menu de ajuda
+
+Precedência de modelo:
+
+1. `-m` ou `--model`
+2. `--2.5` ou `--3.1`
+3. `GEMINI_MODEL`
+4. fallback padrão interno do CLI
+
+## 🛠️ Tecnologias
+
+- Node.js
+- Google Generative AI SDK
+- dotenv
+- ora
+
+## 🤝 Como contribuir
+
+Contribuições são bem-vindas. Se você encontrou um bug, identificou um problema de UX no CLI ou quer sugerir novos fluxos de Agentic Tooling, abra uma issue ou envie um pull request.
+
+## Sobre os Criadores
+
+O **imgcmd** é uma ferramenta gratuita mantida pela equipe da **smoonb.com**.
+
+Se você gostou da proposta e quer conhecer a plataforma por trás do projeto, visite a Smoonb e descubra a solução completa para produtividade comercial, automação e operação com IA.
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](https://www.google.com/search?q=LICENSE) para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
