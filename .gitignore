@@ -7,6 +7,9 @@
 # VS Code
 .vscode/
 
+# Scripts
+scripts/
+
 # Dependencias
 node_modules/
 

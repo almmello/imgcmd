@@ -7,6 +7,9 @@
 # VS Code
 .vscode/
 
+# Scripts locais
+scripts/
+
 # Imagens e artefatos locais gerados pelo CLI
 img/
 
