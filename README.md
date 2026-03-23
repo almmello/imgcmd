@@ -1,151 +1,210 @@
-# 🖼️ imgcmd
+# imgcmd
 
-## 🚀 Powered by Smoonb - A solução completa para sua produtividade comercial.
+## Powered by Smoonb
 
-> O gerador de imagens via terminal seguro, focado em desenvolvedores e pronto para fluxos com IA.
+Smoonb is the official sponsor of imgcmd.
+From the same creators of [smoonb](#supa-moonbase-smoonb).
+Website: https://www.imgcmd.com
 
-Gerar imagens direto pelo chat do editor muitas vezes resulta em arquivos corrompidos, prompts mal executados ou automações frágeis. O **imgcmd** resolve isso com uma abordagem simples: usar o terminal, salvar o binário real da imagem e manter o controle total nas mãos do desenvolvedor.
+imgcmd is a secure CLI for developers who need real image files from prompts without relying on fragile chat-generated code.
 
-O projeto foi pensado para times que querem **segurança**, **previsibilidade** e **integração nativa com agentes de IA** sem depender de gambiarras, extensões obscuras ou geração de SVG/Base64 no chat.
+## Why imgcmd
 
-## ✨ O que o imgcmd entrega
+- Security-first workflow: API keys stay on your machine.
+- Reliable output: saves binary PNG files directly to disk.
+- Fast developer UX: one command, one result, no editor lock-in.
+- Agentic Tooling support: teach Copilot and Cursor to call imgcmd natively.
 
-- Segurança em primeiro lugar: sua chave `GEMINI_API_KEY` fica na sua máquina, e o CLI fala diretamente com os SDKs oficiais.
-- Arquivo real no disco: a imagem é convertida para `Buffer` e salva como `.png` na pasta escolhida.
-- Fluxo rápido para desenvolvedores: rode um comando e receba o asset sem sair do terminal.
-- Organização de saída: escolha diretórios específicos para manter `assets`, `img`, `branding` ou qualquer estrutura do projeto.
-- Agentic Tooling: ensine Copilot e Cursor a usar o `imgcmd` como ferramenta nativa dentro do repositório.
+## Installation
 
-## 🚀 Instalação
-
-Instale globalmente para deixar o comando disponível em qualquer pasta do sistema:
+Install globally so the command is available system-wide:
 
 ```bash
 npm install -g imgcmd
 ```
 
-Depois disso, o comando `imgcmd` fica acessível globalmente no terminal.
+After installation, `imgcmd` is available in any terminal directory.
 
-## ⚙️ Configuração
+## Configuration
 
-O `imgcmd` usa sua própria chave do Google Gemini. Você pode configurar isso por variável de ambiente do sistema ou com um arquivo `.env` na raiz do projeto.
+Use IMGCMD-prefixed variables as the primary configuration layer for predictable behavior in local and agent-driven workflows.
+
+Set your API key (preferred and legacy fallback):
 
 ```bash
-export GEMINI_API_KEY="sua_chave_do_google_aqui"
+export IMGCMD_GEMINI_API_KEY="your_google_api_key"
+# Fallback (legacy compatibility)
+export GEMINI_API_KEY="your_google_api_key"
 ```
 
-Opcionalmente, você também pode definir um modelo padrão:
+Optional default model (preferred and fallback):
 
 ```bash
+export IMGCMD_MODEL="gemini-3.1-flash-image-preview"
+# Fallback (legacy compatibility)
 export GEMINI_MODEL="gemini-3.1-flash-image-preview"
 ```
 
-## 🤖 Agentic Tooling
+Optional language preference at environment level:
 
-O grande diferencial desta versão é permitir que seu editor entenda que imagens devem ser geradas pelo CLI, e não por código improvisado no chat.
+```bash
+export IMGCMD_LANGUAGE="en"
+```
 
-Com isso, o **Copilot** e o **Cursor** podem ser instruídos a abrir o terminal e usar o `imgcmd` quando o usuário pedir uma imagem dentro do projeto.
+Sovereign override for safety-sensitive agent flows:
 
-## 🧭 Guia Passo a Passo para IA
+```bash
+export IMGCMD_FORCE_MODEL="gemini-3.1-flash-image-preview"
+```
 
-### Opção A: Configuração Automática
+When `IMGCMD_FORCE_MODEL` is set, it overrides all CLI model flags and other model settings.
 
-Use um dos comandos abaixo para criar as regras automaticamente no projeto:
+## Agentic Tooling
+
+imgcmd can generate editor rules so your AI assistant uses the CLI instead of trying to produce SVG/Base64 code directly in chat.
+
+### Automatic setup
 
 ```bash
 imgcmd -c vscode
 imgcmd -c cursor
 ```
 
-Arquivos gerados:
+Generated rule files:
 
 - VS Code: `.github/copilot-instructions.md`
 - Cursor: `.cursor/rules/imgcmd.mdc`
 
-### Opção B: Configuração Manual
+### Manual setup
 
-Se preferir fazer manualmente, crie o arquivo no caminho correspondente:
-
-- VS Code: `.github/copilot-instructions.md`
-- Cursor: `.cursor/rules/imgcmd.mdc`
-
-Depois cole este template de regras:
+Create the correct rule file and paste this template:
 
 ```md
-# Regras para Geração de Imagens
-Ao receber um pedido de imagem, NÃO gere código (SVG/Base64).
-Use sempre o CLI instalado no sistema via terminal:
-`imgcmd "prompt detalhado" --dir <pasta_de_destino>`
+# Image Generation Rules
+When asked to create an image, DO NOT generate code (SVG/Base64).
+Always use the system CLI through the terminal:
+`imgcmd "detailed prompt" --dir <destination_folder>`
 ```
 
-No Cursor, o arquivo `.cursor/rules/imgcmd.mdc` deve incluir este frontmatter no topo:
+For Cursor, include this frontmatter at the top of `.cursor/rules/imgcmd.mdc`:
 
 ```yaml
 ---
-description: Regras para geração de imagens via CLI imgcmd
+description: Rules for image generation via imgcmd CLI
 globs: "*"
 ---
 ```
 
-## 💻 Uso Atualizado
+## Language Support
 
-### Uso básico
+imgcmd automatically detects your terminal language from system locale variables.
 
-```bash
-imgcmd "Um ícone minimalista de foguete, fundo transparente, flat design"
-```
-
-### Organizando a saída em pastas
+- Supported built-in languages: English (`en`) and Portuguese (`pt`)
+- Default fallback language: English (`en`)
+- You can force the language manually with:
 
 ```bash
-imgcmd "Logo para tela de login em estilo clean" --dir assets/img
+imgcmd --lang en "your prompt"
+imgcmd --lang pt "seu prompt"
 ```
 
-### Seleção rápida de modelo
+Rule generation via `--create-rule` is intentionally written in English for better AI model interoperability.
+
+## Usage Examples
+
+Basic usage:
 
 ```bash
-imgcmd "Mockup de dashboard comercial moderno" --3.1
+imgcmd "A minimal rocket icon, transparent background"
 ```
 
-### Flexibilidade total com modelo específico
+Organize output folders:
 
 ```bash
-imgcmd "Mascote 3D para campanha de vendas" -m <modelo_especifico>
+imgcmd "Landing page hero illustration" --dir assets/img
 ```
 
-## 🧩 Flags disponíveis
+Quick model selection:
 
-- `--2.5`: usa `gemini-2.5-flash-image`
-- `--3.1`: usa `gemini-3.1-flash-image-preview`
-- `-m`, `--model <nome>`: define um modelo exato
-- `-d`, `--dir <pasta>`: salva a imagem no diretório informado
-- `-c`, `--create-rule <ide>`: cria regras para IA no projeto (`vscode` ou `cursor`)
-- `-h`, `--help`: mostra o menu de ajuda
+```bash
+imgcmd "Modern analytics dashboard concept" --3.1
+```
 
-Precedência de modelo:
+Explicit model control:
 
-1. `-m` ou `--model`
-2. `--2.5` ou `--3.1`
-3. `GEMINI_MODEL`
-4. fallback padrão interno do CLI
+```bash
+imgcmd "Campaign mascot in 3D" -m <specific_model_name>
+```
 
-## 🛠️ Tecnologias
+## CLI Flags
 
-- Node.js
-- Google Generative AI SDK
-- dotenv
-- ora
+- `--2.5`: use `gemini-2.5-flash-image`
+- `--3.1`: use `gemini-3.1-flash-image-preview`
+- `-m`, `--model <name>`: set explicit model name
+- `-d`, `--dir <folder>`: output directory
+- `-c`, `--create-rule <ide>`: generate AI rules (`vscode` or `cursor`)
+- `--lang <id>`: force language (`en` or `pt`)
+- `-h`, `--help`: show help
 
-## 🤝 Como contribuir
+### .env setup
 
-Contribuições são bem-vindas. Se você encontrou um bug, identificou um problema de UX no CLI ou quer sugerir novos fluxos de Agentic Tooling, abra uma issue ou envie um pull request.
+Create a `.env` file in the project root:
 
-## Sobre os Criadores
+```dotenv
+IMGCMD_GEMINI_API_KEY=your_google_api_key
+IMGCMD_MODEL=gemini-3.1-flash-image-preview
+IMGCMD_LANGUAGE=en
+# Optional sovereign override:
+IMGCMD_FORCE_MODEL=gemini-3.1-flash-image-preview
+```
 
-O **imgcmd** é uma ferramenta gratuita mantida pela equipe da **smoonb.com**.
+The optional sovereign override (`IMGCMD_FORCE_MODEL`) is a safety control for teams and AI agents: it locks the model at environment level so no CLI flag (`-m`, `--2.5`, `--3.1`) can switch to a different model by mistake.
+When `IMGCMD_FORCE_MODEL` is set in `.env`, that value always wins, even if an AI agent sends a prompt command with another model parameter.
 
-Se você gostou da proposta e quer conhecer a plataforma por trás do projeto, visite a Smoonb e descubra a solução completa para produtividade comercial, automação e operação com IA.
+Legacy compatibility remains available via `GEMINI_API_KEY` and `GEMINI_MODEL`.
 
-## 📄 Licença
+Model precedence:
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+1. `IMGCMD_FORCE_MODEL` (enforced override)
+2. `-m`/`--model` or `--2.5`/`--3.1`
+3. `IMGCMD_MODEL`
+4. `GEMINI_MODEL`
+5. internal default fallback
+
+## About the Creators
+
+imgcmd is a free tool maintained by the smoonb.com team and owned by Goalmoon Tecnologia LTDA.
+
+If you like this project, check Smoonb to discover a broader platform for sales productivity and AI-enhanced operations.
+
+## Supa Moonbase (smoonb)
+
+Complete Supabase backup and migration tool.
+
+Backup and restore: complete and simple, as it should be.
+
+Developed and owned by: Goalmoon Tecnologia LTDA  
+Website: https://www.smoonb.com  
+GitHub: https://github.com/almmello/smoonb
+
+### Objective
+
+smoonb solves the problem of tools that only back up the PostgreSQL database while ignoring critical Supabase components.
+
+### Backup Components
+
+smoonb performs full backup coverage of your Supabase project:
+
+- Database PostgreSQL (full backup via pg_dumpall and split SQL files, matching Dashboard behavior)
+- Database extensions and settings
+- Custom roles
+- Edge Functions (automatic download from server)
+- Auth settings (via Management API)
+- Storage buckets (metadata, settings, and files via Management API + Supabase Client, ZIP in Dashboard format)
+- Realtime settings (7 parameters captured interactively)
+- Supabase .temp files
+- Migrations (all project migrations via supabase migration fetch)
+
+## License
+
+This project is licensed under MIT. See `LICENSE` for details.

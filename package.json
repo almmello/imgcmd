@@ -1,7 +1,8 @@
 {
   "name": "imgcmd",
-  "version": "0.0.2",
-  "description": "CLI para geração de imagens via terminal.",
+  "version": "0.0.3",
+  "description": "Secure terminal CLI for image generation and AI agent tooling.",
+  "author": "Goalmoon Tecnologia LTDA",
   "type": "module",
   "scripts": {
     "start": "node ./index.js",
