@@ -1,6 +1,6 @@
 {
   "name": "imgcmd",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Secure terminal CLI for image generation and AI agent tooling.",
   "author": "Goalmoon Tecnologia LTDA",
   "type": "module",
@@ -16,7 +16,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.6.1",
-    "imgcmd": "file:",
     "ora": "^8.2.0"
   },
   "license": "MIT"

@@ -1,10 +1,25 @@
 #!/usr/bin/env node
 
-import "dotenv/config";
+import { config as dotenvConfig } from "dotenv";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import ora from "ora";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+function loadEnv() {
+	const cwd = process.cwd();
+	const localEnvPath = path.resolve(cwd, ".env.local");
+	const defaultEnvPath = path.resolve(cwd, ".env");
+
+	if (existsSync(localEnvPath)) {
+		dotenvConfig({ path: localEnvPath, override: false });
+	}
+
+	if (existsSync(defaultEnvPath)) {
+		dotenvConfig({ path: defaultEnvPath, override: false });
+	}
+}
 
 const DEFAULT_MODEL = "gemini-3.1-flash-image-preview";
 const SUPPORTED_LANGUAGES = new Set(["en", "pt"]);
@@ -25,6 +40,12 @@ const STRINGS = {
 		unsupportedIde: 'Error: Unsupported IDE. Use "vscode" or "cursor".',
 		rulesCreated: (ruleFilePath) =>
 			`Rules created successfully at: ${ruleFilePath}`,
+		createRuleDeprecated:
+			"[imgcmd] Deprecated: --create-rule is superseded by --create-skill. This legacy command remains available for backward compatibility.",
+		skillCreated: (skillFilePath) =>
+			`Agent Skill created successfully at: ${skillFilePath}`,
+		unsupportedSkillTarget:
+			'Error: Unsupported target. Use "copilot" or "vscode".',
 		help: (defaultModel) => `
 imgcmd - Secure image generation from your terminal
 Website: https://www.imgcmd.com
@@ -46,12 +67,17 @@ Flags:
 	--3.1                    Use gemini-3.1-flash-image-preview
 	-m, --model <name>       Set an explicit model name (highest priority)
 	-d, --dir <folder>       Save the image in a specific folder
-	-c, --create-rule <ide>  Create AI rules in this project (vscode or cursor)
+	--create-skill <target>  Create Agent Skill file (copilot or vscode)
+	-c, --create-rule <ide>  Create AI rules — DEPRECATED, use --create-skill
 	--lang <id>              Force terminal language (en or pt)
 	-h, --help               Show this help menu
 
 .env setup:
-	Create a .env file in your project root with:
+	Supported files (loaded in priority order):
+	  .env.local  (first — preferred for secrets, keep out of git)
+	  .env        (fallback)
+
+	Add variables to either file:
 	IMGCMD_GEMINI_API_KEY=your_google_api_key
 	IMGCMD_MODEL=gemini-3.1-flash-image-preview
 	IMGCMD_LANGUAGE=en
@@ -59,7 +85,7 @@ Flags:
 	IMGCMD_FORCE_MODEL=gemini-3.1-flash-image-preview
 	The optional sovereign override locks the model at environment level,
 	preventing CLI flags from changing it by mistake.
-	If IMGCMD_FORCE_MODEL is set in .env, it always wins,
+	If IMGCMD_FORCE_MODEL is set in .env or .env.local, it always wins,
 	even when an AI agent sends another model parameter.
 
 Model precedence:
@@ -70,13 +96,18 @@ Model precedence:
 	5) ${defaultModel}
 
 Agentic Tooling (AI Integration)
-Teach your editor (Copilot/Cursor) to use this CLI natively.
+Teach your editor to use this CLI natively.
 
-OPTION A: Automatic Setup
+OPTION A: Agent Skills (recommended, GitHub Copilot / VS Code)
+$ imgcmd --create-skill copilot
+  Also accepted: imgcmd --create-skill vscode
+  Generated file: .github/skills/generate-image-file/SKILL.md
+
+OPTION B: Legacy Rules (deprecated)
 $ imgcmd --create-rule vscode
 $ imgcmd --create-rule cursor
 
-OPTION B: Manual Setup (Step by Step)
+OPTION C: Manual Setup (Step by Step)
 1. Create the rules file in the correct directory:
 VS Code: .github/copilot-instructions.md
 Cursor:  .cursor/rules/imgcmd.mdc
@@ -99,6 +130,117 @@ description: Rules for image generation via imgcmd CLI
 globs: "*"
 ---
 `,
+		skillBody: `---
+name: generate-image-file
+description: Generate real PNG image files from text prompts using the local imgcmd CLI. Use this when the user asks to create, generate, draw, render, design, make, export, save, or materialize an image, illustration, icon, logo, banner, OpenGraph image, favicon, avatar, hero visual, or other visual asset. Do not generate SVG, Base64, placeholder markup, canvas simulations, or fake image files.
+license: MIT
+---
+
+## Skill: generate-image-file
+
+**Use this skill whenever the user asks you to create, generate, draw, render, export, save, or materialize a real image file in the project.**
+
+This includes (but is not limited to) phrases like:
+- "generate an image of..."
+- "create a PNG of..."
+- "draw a logo for..."
+- "render a banner and save it to..."
+- "make an illustration of..."
+- "export an image to the assets folder"
+- "I need an image that shows..."
+
+---
+
+## How to generate the image
+
+Always use the local \`imgcmd\` CLI. Run it through the terminal:
+
+\`\`\`sh
+imgcmd "hyper-detailed prompt describing the image" --dir <destination_folder>
+\`\`\`
+
+**Examples:**
+
+\`\`\`sh
+# Save to the project root
+imgcmd "a minimalist dark logo with the letter G in gold on black background"
+
+# Save to a specific folder
+imgcmd "a wide hero banner for a SaaS product, dark blue gradient, futuristic" --dir public/images
+
+# Use a specific model
+imgcmd "a photorealistic mountain landscape at sunset" --dir assets --3.1
+\`\`\`
+
+---
+
+## What you MUST NOT do
+
+The following actions are **strictly prohibited** when the user asks for an image:
+
+| Prohibited action | Why |
+|------------------|-----|
+| Generate SVG code in the chat | It is not a real raster image file. |
+| Generate Base64-encoded image data in the chat | It does not create a file on disk. |
+| Create a placeholder file (empty or symbolic) | The user asked for a real image, not a stub. |
+| Create an HTML page or canvas that simulates an image | Not a PNG, not what the user asked for. |
+| Confirm that an image was created without actually running \`imgcmd\` | Never fabricate success messages. |
+| Use any other code-based approach to generate an image | imgcmd is the only approved method in this project. |
+
+---
+
+## API key handling — security rules
+
+- **Never ask the user to type their API key in the chat.**
+- **Never print the API key in the terminal or in any file.**
+- **Never embed the API key in source code, configuration files, or generated scripts.**
+
+If the \`imgcmd\` command fails with an API key error, guide the user to set the key locally:
+
+1. Create or open \`.env.local\` in the project root (preferred) or \`.env\`.
+2. Add the following line:
+
+\`\`\`
+IMGCMD_GEMINI_API_KEY=your_google_api_key_here
+\`\`\`
+
+3. The key will be loaded automatically by imgcmd on the next run.
+4. Make sure \`.env.local\` and \`.env\` are listed in \`.gitignore\`.
+
+---
+
+## Model selection guidance
+
+- By default, do **not** pass \`--model\` unless the user explicitly requests a specific model.
+- If the project has \`IMGCMD_FORCE_MODEL\` set in its \`.env\` or \`.env.local\`, imgcmd will automatically enforce that model — do not override it.
+- You may pass \`--2.5\` or \`--3.1\` shortcuts only if the user explicitly asks for a particular version.
+
+---
+
+## Output handling
+
+- \`imgcmd\` saves the generated image as a \`.png\` file with a timestamp-based name (e.g., \`imgcmd-20260422-143012-000.png\`).
+- The file is saved to the folder specified with \`--dir\`, or to the current working directory if \`--dir\` is omitted.
+- After running the command, confirm the file path shown in the terminal output to the user.
+- Do **not** attempt to open, embed, or display the image in the chat — simply confirm the path.
+
+---
+
+## Troubleshooting guidance
+
+If \`imgcmd\` is not found, **do not install packages automatically** without the user's explicit approval.
+
+Tell the user they can install it with:
+
+\`\`\`sh
+npm install -g imgcmd
+\`\`\`
+
+If the API key error appears even after setting it in \`.env.local\`:
+- Verify there are no spaces around the \`=\` sign.
+- Verify the file is saved as plain text (not with BOM).
+- Try restarting the terminal session so the shell re-reads the environment.
+`,
 	},
 	pt: {
 		usage: 'Uso: imgcmd "descreva a imagem que deseja gerar"',
@@ -115,6 +257,12 @@ globs: "*"
 		unsupportedIde: 'Erro: IDE não suportado. Use "vscode" ou "cursor".',
 		rulesCreated: (ruleFilePath) =>
 			`Regras criadas com sucesso em: ${ruleFilePath}`,
+		createRuleDeprecated:
+			"[imgcmd] Descontinuado: --create-rule foi substituido por --create-skill. Este comando legado continua disponivel para compatibilidade.",
+		skillCreated: (skillFilePath) =>
+			`Agent Skill criado com sucesso em: ${skillFilePath}`,
+		unsupportedSkillTarget:
+			'Erro: Alvo nao suportado. Use "copilot" ou "vscode".',
 		help: (defaultModel) => `
 imgcmd - Gerador seguro de imagens via terminal
 Website: https://www.imgcmd.com
@@ -136,12 +284,17 @@ Flags:
 	--3.1                    Usa o modelo gemini-3.1-flash-image-preview
 	-m, --model <nome>       Define o nome exato do modelo (prioridade máxima)
 	-d, --dir <pasta>        Salva a imagem na pasta especificada
-	-c, --create-rule <ide>  Cria regras para IA no projeto (vscode ou cursor)
+	--create-skill <alvo>    Cria arquivo Agent Skill (copilot ou vscode)
+	-c, --create-rule <ide>  Cria regras para IA — DESCONTINUADO, use --create-skill
 	--lang <id>              Força o idioma do terminal (en ou pt)
 	-h, --help               Exibe este menu de ajuda
 
 Configuração de .env:
-	Crie um arquivo .env na raiz do projeto com:
+	Arquivos suportados (em ordem de prioridade):
+	  .env.local  (primeiro — preferido para segredos, manter fora do git)
+	  .env        (fallback)
+
+	Adicione variaveis em qualquer um dos arquivos:
 	IMGCMD_GEMINI_API_KEY=sua_chave_google
 	IMGCMD_MODEL=gemini-3.1-flash-image-preview
 	IMGCMD_LANGUAGE=pt
@@ -149,7 +302,7 @@ Configuração de .env:
 	IMGCMD_FORCE_MODEL=gemini-3.1-flash-image-preview
 	A trava soberana opcional fixa o modelo no ambiente,
 	evitando que flags de CLI mudem esse modelo por engano.
-	Se IMGCMD_FORCE_MODEL estiver definido no .env, ele sempre prevalece,
+	Se IMGCMD_FORCE_MODEL estiver definido no .env ou .env.local, ele sempre prevalece,
 	mesmo que um agente de IA envie outro parametro de modelo.
 
 Precedência de modelo:
@@ -160,13 +313,18 @@ Precedência de modelo:
 	5) ${defaultModel}
 
 Agentic Tooling (Integração com IA)
-Ensine seu editor (Copilot/Cursor) a usar este CLI nativamente.
+Ensine seu editor a usar este CLI nativamente.
 
-OPÇÃO A: Configuração Automática
+OPÇÃO A: Agent Skills (recomendado, GitHub Copilot / VS Code)
+$ imgcmd --create-skill copilot
+  Também aceito: imgcmd --create-skill vscode
+  Arquivo gerado: .github/skills/generate-image-file/SKILL.md
+
+OPÇÃO B: Regras Legadas (descontinuado)
 $ imgcmd --create-rule vscode
 $ imgcmd --create-rule cursor
 
-OPÇÃO B: Configuração Manual (Passo a Passo)
+OPÇÃO C: Configuração Manual (Passo a Passo)
 1. Crie o arquivo de regras no diretório correto:
 VS Code: .github/copilot-instructions.md
 Cursor:  .cursor/rules/imgcmd.mdc
@@ -201,6 +359,7 @@ function parseArguments(args) {
 	let showHelp = false;
 	let outputDir = process.cwd();
 	let createRule = null;
+	let createSkill = null;
 	let forcedLang = null;
 
 	for (let index = 0; index < args.length; index += 1) {
@@ -256,6 +415,19 @@ function parseArguments(args) {
 			continue;
 		}
 
+		if (arg === "--create-skill") {
+			const nextValue = args[index + 1];
+
+			if (nextValue && !nextValue.startsWith("-")) {
+				createSkill = nextValue.toLowerCase();
+				index += 1;
+			} else {
+				createSkill = "";
+			}
+
+			continue;
+		}
+
 		if (arg === "--lang") {
 			const nextValue = args[index + 1];
 
@@ -283,7 +455,7 @@ function parseArguments(args) {
 	const prompt = promptParts.join(" ").trim();
 	const modelFromArgs = modelFromFlag || selectedModel || null;
 
-	return { prompt, modelFromArgs, showHelp, outputDir, createRule, forcedLang };
+	return { prompt, modelFromArgs, showHelp, outputDir, createRule, createSkill, forcedLang };
 }
 
 function normalizeLanguage(value) {
@@ -355,12 +527,15 @@ function formatErrorMessage(error, strings) {
 }
 
 async function main() {
+	loadEnv();
+
 	const {
 		prompt,
 		modelFromArgs,
 		showHelp,
 		outputDir,
 		createRule,
+		createSkill,
 		forcedLang,
 	} = parseArguments(
 		process.argv.slice(2),
@@ -383,7 +558,24 @@ async function main() {
 		process.exit(0);
 	}
 
+	if (createSkill !== null) {
+		const validTargets = new Set(["copilot", "vscode"]);
+
+		if (!validTargets.has(createSkill)) {
+			console.error(strings.unsupportedSkillTarget);
+			process.exit(1);
+		}
+
+		const skillDir = path.resolve(process.cwd(), ".github", "skills", "generate-image-file");
+		await mkdir(skillDir, { recursive: true });
+		const skillFilePath = path.resolve(skillDir, "SKILL.md");
+		await writeFile(skillFilePath, STRINGS.en.skillBody, "utf8");
+		console.log(strings.skillCreated(skillFilePath));
+		process.exit(0);
+	}
+
 	if (createRule !== null) {
+		console.error(strings.createRuleDeprecated);
 		let ruleFilePath;
 		const markdownRuleBody = STRINGS.en.ruleBody;
 		let ruleContent = markdownRuleBody;

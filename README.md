@@ -61,19 +61,33 @@ When `IMGCMD_FORCE_MODEL` is set, it overrides all CLI model flags and other mod
 
 ## Agentic Tooling
 
-imgcmd can generate editor rules so your AI assistant uses the CLI instead of trying to produce SVG/Base64 code directly in chat.
+imgcmd generates Agent Skills and legacy rule files so your AI assistant uses the CLI instead of producing SVG/Base64 code in chat.
 
-### Automatic setup
+### Agent Skills (recommended — GitHub Copilot / VS Code)
 
 ```bash
-imgcmd -c vscode
-imgcmd -c cursor
+imgcmd --create-skill copilot
+# Also accepted:
+imgcmd --create-skill vscode
+```
+
+Generated file:
+
+- `.github/skills/generate-image-file/SKILL.md`
+
+### Legacy rules (deprecated)
+
+```bash
+imgcmd --create-rule vscode
+imgcmd --create-rule cursor
 ```
 
 Generated rule files:
 
 - VS Code: `.github/copilot-instructions.md`
 - Cursor: `.cursor/rules/imgcmd.mdc`
+
+> **Note:** `--create-rule` is deprecated. Use `--create-skill` instead. The legacy command continues to work for backward compatibility.
 
 ### Manual setup
 
@@ -142,13 +156,21 @@ imgcmd "Campaign mascot in 3D" -m <specific_model_name>
 - `--3.1`: use `gemini-3.1-flash-image-preview`
 - `-m`, `--model <name>`: set explicit model name
 - `-d`, `--dir <folder>`: output directory
-- `-c`, `--create-rule <ide>`: generate AI rules (`vscode` or `cursor`)
+- `--create-skill <target>`: create Agent Skill file (`copilot` or `vscode`)
+- `-c`, `--create-rule <ide>`: generate AI rules — **deprecated**, use `--create-skill`
 - `--lang <id>`: force language (`en` or `pt`)
 - `-h`, `--help`: show help
 
 ### .env setup
 
-Create a `.env` file in the project root:
+imgcmd loads environment variables from the following files in priority order:
+
+1. `.env.local` — loaded first; preferred for secrets; keep out of version control
+2. `.env` — fallback
+
+Variables already set in your shell or CI environment always take priority over both files.
+
+Create `.env.local` or `.env` in the project root:
 
 ```dotenv
 IMGCMD_GEMINI_API_KEY=your_google_api_key
@@ -159,7 +181,7 @@ IMGCMD_FORCE_MODEL=gemini-3.1-flash-image-preview
 ```
 
 The optional sovereign override (`IMGCMD_FORCE_MODEL`) is a safety control for teams and AI agents: it locks the model at environment level so no CLI flag (`-m`, `--2.5`, `--3.1`) can switch to a different model by mistake.
-When `IMGCMD_FORCE_MODEL` is set in `.env`, that value always wins, even if an AI agent sends a prompt command with another model parameter.
+When `IMGCMD_FORCE_MODEL` is set, that value always wins, even if an AI agent sends a prompt command with another model parameter.
 
 Legacy compatibility remains available via `GEMINI_API_KEY` and `GEMINI_MODEL`.
 
