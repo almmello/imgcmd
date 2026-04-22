@@ -13,7 +13,7 @@ imgcmd is a secure CLI for developers who need real image files from prompts wit
 - Security-first workflow: API keys stay on your machine.
 - Reliable output: saves binary PNG files directly to disk.
 - Fast developer UX: one command, one result, no editor lock-in.
-- Agentic Tooling support: teach Copilot and Cursor to call imgcmd natively.
+- Agentic Tooling support: teach Copilot to call imgcmd natively.
 
 ## Installation
 
@@ -48,7 +48,7 @@ export GEMINI_MODEL="gemini-3.1-flash-image-preview"
 Optional language preference at environment level:
 
 ```bash
-export IMGCMD_LANGUAGE="en"
+export IMGCMD_LANGUAGE="en-US"
 ```
 
 Sovereign override for safety-sensitive agent flows:
@@ -79,15 +79,13 @@ Generated file:
 
 ```bash
 imgcmd --create-rule vscode
-imgcmd --create-rule cursor
 ```
 
-Generated rule files:
+Generated rule file:
 
 - VS Code: `.github/copilot-instructions.md`
-- Cursor: `.cursor/rules/imgcmd.mdc`
 
-> **Note:** `--create-rule` is deprecated. Use `--create-skill` instead. The legacy command continues to work for backward compatibility.
+> **Note:** `--create-rule vscode` is deprecated. Use `--create-skill` instead. `--create-rule cursor` is no longer supported and will print an error.
 
 ### Manual setup
 
@@ -100,27 +98,21 @@ Always use the system CLI through the terminal:
 `imgcmd "detailed prompt" --dir <destination_folder>`
 ```
 
-For Cursor, include this frontmatter at the top of `.cursor/rules/imgcmd.mdc`:
-
-```yaml
----
-description: Rules for image generation via imgcmd CLI
-globs: "*"
----
-```
-
 ## Language Support
 
 imgcmd automatically detects your terminal language from system locale variables.
 
-- Supported built-in languages: English (`en`) and Portuguese (`pt`)
-- Default fallback language: English (`en`)
+- Supported built-in languages: English (`en-US`) and Portuguese (`pt-BR`)
+- Default fallback language: English (`en-US`)
+- Short aliases `en` and `pt` are also accepted.
 - You can force the language manually with:
 
 ```bash
-imgcmd --lang en "your prompt"
-imgcmd --lang pt "seu prompt"
+imgcmd --lang en-US "your prompt"
+imgcmd --lang pt-BR "seu prompt"
 ```
+
+- The PT locale affects CLI terminal output **and the generated SKILL.md file**.
 
 Rule generation via `--create-rule` is intentionally written in English for better AI model interoperability.
 
@@ -157,8 +149,8 @@ imgcmd "Campaign mascot in 3D" -m <specific_model_name>
 - `-m`, `--model <name>`: set explicit model name
 - `-d`, `--dir <folder>`: output directory
 - `--create-skill <target>`: create Agent Skill file (`copilot` or `vscode`)
-- `-c`, `--create-rule <ide>`: generate AI rules — **deprecated**, use `--create-skill`
-- `--lang <id>`: force language (`en` or `pt`)
+- `-c`, `--create-rule vscode`: generate VS Code rules file — **deprecated**; cursor no longer supported
+- `--lang <id>`: force language (`en-US` or `pt-BR`; aliases `en` and `pt` are accepted)
 - `-h`, `--help`: show help
 
 ### .env setup
@@ -175,7 +167,9 @@ Create `.env.local` or `.env` in the project root:
 ```dotenv
 IMGCMD_GEMINI_API_KEY=your_google_api_key
 IMGCMD_MODEL=gemini-3.1-flash-image-preview
-IMGCMD_LANGUAGE=en
+# Lock display language (overrides OS auto-detection). Aliases en and pt are accepted:
+IMGCMD_LANGUAGE=en-US
+# IMGCMD_LANGUAGE=pt-BR
 # Optional sovereign override:
 IMGCMD_FORCE_MODEL=gemini-3.1-flash-image-preview
 ```
